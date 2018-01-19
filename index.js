@@ -30,19 +30,14 @@ wss.on("connection", function connection(ws) {
   setState(state);
 });
 
-const send = (str, options, callback) => {
-  if(wss.clients.length || true){
+const send = (str, options, callback = () => {}) => {
     console.log("clients");
-    try{
     console.log("sending", JSON.stringify(str));
-    wss.clients.forEach(c => c.send(JSON.stringify(str), options, callback));
-}catch(e){console.log(e);}
-  }else if(callback){
-    console.log("cant get clients");
+    wss.clients.forEach(c => {
+      if (c.isAlive === false) return c.terminate();
+        c.send(JSON.stringify(str), options, err => err && console.error("SWALLOWED", err));
+    });
     callback();
-  }else{
-    console.log("cant get clients");
-  }
 };
 
 const setState = newState => {
@@ -86,7 +81,7 @@ const start = () => {
       send({crash: {code, signal}}, {}, start);
     }else{
       console.log("closing due to user termination");
-      send({exit: {code, signal}}, {}, process.exit);
+      send({exit: {code, signal}}, {}, () => wss.close(process.exit));
     }
   });
 };
