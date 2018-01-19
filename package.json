@@ -1,0 +1,22 @@
+{
+  "name": "mc-plus-plus",
+  "version": "1.0.0",
+  "description": "Spigot server wrapper &amp; web client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/programmer5000-com/mc-plus-plus.git"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/programmer5000-com/mc-plus-plus/issues"
+  },
+  "homepage": "https://github.com/programmer5000-com/mc-plus-plus#readme",
+  "dependencies": {
+    "ws": "^4.0.0"
+  }
+}
