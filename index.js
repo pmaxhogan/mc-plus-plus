@@ -34,7 +34,7 @@ const send = (str, options, callback) => {
 };
 
 const setState = newState => {
-  send({state});
+  send({newState: state});
   state = newState;
 };
 
@@ -45,7 +45,7 @@ let lastLine = "";
 let server;
 
 const start = () => {
-  state = 0;
+  setState(0);
   server = execFile("java", ["-Xms1G", "-Xmx1G", "-XX:+UseConcMarkSweepGC", "-DIReallyKnowWhatIAmDoingISwear", "-jar", resolve(process.argv[2])], {
     cwd: dirname(resolve(process.argv[2]))
   });
@@ -84,7 +84,7 @@ start();
 const procLine = line => {
   const match = line.match(/Done \((.*?)\)! For help, type "help" or "\?"/);
   if(match){
-    state = 1;
+    setState(1);
     send({loadTime: match[1]});
     loadTime = match[1];
   }
@@ -98,13 +98,13 @@ const stop = () => {
       server.kill("SIGINT");
     break;
     case 1:
-      state = 2;
       server.stdin.write("restart\n");
     break;
     case 2:
       console.log("Looks like you're trying to stop the process while it is already stopping. Please wait a bit.");
     break;
   }
+  setState(2);
 
 };
 
