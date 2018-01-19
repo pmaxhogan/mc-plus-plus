@@ -2,6 +2,11 @@ const { execFile } = require("child_process");
 const { resolve, dirname } = require("path");
 const WebSocket = require("ws");
 
+(() => {
+  let oldLog = console.log;
+  console.log = (...args) => oldLog("MC++: ", ...args);
+})();
+
 const wss = new WebSocket.Server({ port: 8081 });
 
 let clients = [];
@@ -30,8 +35,7 @@ const send = (str, options, callback) => {
     console.log("clients");
     try{
     console.log("sending", JSON.stringify(str));
-setTimeout(() =>
-    wss.clients.forEach(c => c.send(JSON.stringify(str), options, callback)), 250);
+    wss.clients.forEach(c => c.send(JSON.stringify(str), options, callback));
 }catch(e){console.log(e);}
   }else if(callback){
     console.log("cant get clients");
@@ -110,6 +114,7 @@ const stop = () => {
     break;
     case 2:
       console.log("Looks like you're trying to stop the process while it is already stopping. Please wait a bit.");
+      server.stdin.write("restart\n");
     break;
   }
   setState(2);
