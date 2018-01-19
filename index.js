@@ -15,21 +15,29 @@ wss.on("connection", function connection(ws) {
   });
 
   if(state === 1){
-    ws.send({loadTime});
+    // ws.send({loadTime});
   }
 
   ws.on("error", () => console.log("bye connection"));//why the heck https://github.com/websockets/ws/issues/1256
 
-  clients.push(ws);
+  // clients.push(ws);
 
   setState(state);
 });
 
 const send = (str, options, callback) => {
-  if(clients.length){
-    clients.forEach(c => c.send(JSON.stringify(str), options, callback));
+  if(wss.clients.length || true){
+    console.log("clients");
+    try{
+    console.log("sending", JSON.stringify(str));
+setTimeout(() =>
+    wss.clients.forEach(c => c.send(JSON.stringify(str), options, callback)), 250);
+}catch(e){console.log(e);}
   }else if(callback){
+    console.log("cant get clients");
     callback();
+  }else{
+    console.log("cant get clients");
   }
 };
 
