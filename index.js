@@ -1,6 +1,8 @@
 const { execFile } = require("child_process");
 const { resolve, dirname } = require("path");
 const WebSocket = require("ws");
+const javaArgs = "-Xms1G -Xmx1G -XX:+UseConcMarkSweepGC -DIReallyKnowWhatIAmDoingISwear -server -jar";
+
 
 (() => {
   let oldLog = console.log;
@@ -9,10 +11,10 @@ const WebSocket = require("ws");
 
 const wss = new WebSocket.Server({ port: 8081 });
 
-let clients = [];
-
 let loadTime = "";
 let state = 0;//0 = loading, 1 = ready, 2 = shutting down
+let numPlayers = 0;
+let playersOnline = 0;
 
 wss.on("connection", function connection(ws) {
   ws.on("message", function incoming(message) {
@@ -20,12 +22,10 @@ wss.on("connection", function connection(ws) {
   });
 
   if(state === 1){
-    // ws.send({loadTime});
+    ws.send({loadTime});
   }
 
   ws.on("error", () => console.log("bye connection"));//why the heck https://github.com/websockets/ws/issues/1256
-
-  // clients.push(ws);
 
   setState(state);
 });
@@ -51,9 +51,11 @@ let lastLine = "";
 
 let server;
 
+const numPlayersOnline = 0;
+
 const start = () => {
   setState(0);
-  server = execFile("java", ["-Xms1G", "-Xmx1G", "-XX:+UseConcMarkSweepGC", "-DIReallyKnowWhatIAmDoingISwear", "-jar", resolve(process.argv[2])], {
+  server = execFile("java", [...javaArgs.split(" "), resolve(process.argv[2])], {
     cwd: dirname(resolve(process.argv[2]))
   });
 
@@ -89,11 +91,14 @@ const start = () => {
 start();
 
 const procLine = line => {
-  const match = line.match(/Done \((.*?)\)! For help, type "help" or "\?"/);
-  if(match){
+  const started = line.match(/Done \((.*?)\)! For help, type "help" or "\?"/);
+  const list = /There are (\d+)\/(\d+) players online:$/;
+  if(started){
     setState(1);
     send({loadTime: match[1]});
     loadTime = match[1];
+  }else if(list){
+
   }
 };
 
@@ -113,8 +118,13 @@ const stop = () => {
     break;
   }
   setState(2);
-
 };
+
+setTimeout(() =>
+setInterval(() => {
+  if(state !== 1) return;
+  server.stdin.write("list\n");
+}, 5000), 1000);
 
 process.on("SIGTERM", stop);
 process.on("SIGINT", stop);
