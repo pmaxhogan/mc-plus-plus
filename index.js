@@ -34,8 +34,8 @@ const send = (str, options, callback) => {
 };
 
 const setState = newState => {
-  send({newState: state});
   state = newState;
+  send({newState: state});
 };
 
 console.log("Path to server: ", resolve(process.argv[2]));
