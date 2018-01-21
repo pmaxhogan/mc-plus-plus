@@ -1,6 +1,11 @@
 const { execFile } = require("child_process");
-const { resolve, dirname } = require("path");
+const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
+const ncp = require("ncp").ncp;
+const serverPath = dirname(resolve(process.argv[2]));
+
+ncp.limit = 16;
+
 const javaArgs = "-Xms1G -Xmx1G -XX:+UseConcMarkSweepGC -DIReallyKnowWhatIAmDoingISwear -server -jar";
 
 
@@ -15,6 +20,12 @@ let loadTime = "";
 let state = 0;//0 = loading, 1 = ready, 2 = shutting down
 let numPlayers = 0;
 let playersOnline = 0;
+
+let lines = [];
+
+const onLine = (regex, callback) => {
+  lines.push([regex, callback]);
+};
 
 wss.on("connection", function connection(ws) {
   ws.on("message", function incoming(message) {
@@ -56,7 +67,7 @@ const numPlayersOnline = 0;
 const start = () => {
   setState(0);
   server = execFile("java", [...javaArgs.split(" "), resolve(process.argv[2])], {
-    cwd: dirname(resolve(process.argv[2]))
+    cwd: serverPath
   });
 
 
@@ -92,14 +103,18 @@ start();
 
 const procLine = line => {
   const started = line.match(/Done \((.*?)\)! For help, type "help" or "\?"/);
-  const list = /There are (\d+)\/(\d+) players online:$/;
   if(started){
     setState(1);
     send({loadTime: match[1]});
     loadTime = match[1];
-  }else if(list){
-
   }
+
+  lines.forEach(lineToCompare => {
+    const match = line.match(lineToCompare[0]);
+    if(match){
+      lineToCompare[1](...match);
+    }
+  });
 };
 
 
@@ -123,7 +138,32 @@ const stop = () => {
 setTimeout(() =>
 setInterval(() => {
   if(state !== 1) return;
-  server.stdin.write("list\n");
+  server.stdin.write("save-all\n");
+  onLine(/Saved the world$/ig, () => {
+    server.stdin.write("save-off\n");
+    onLine(/Turned off world auto-saving$/ig, () => {
+      const timestamp = (new Date()).toISOString();
+
+      fs.mkdir(join(serverPath, "backups", timestamp), err => {
+        if(err) return console.error(err);
+
+        ncp(join(serverPath, "world"), join(serverPath, "backups", timestamp, "world"), err => {
+          if(err) return console.error(err);
+
+          ncp(join(serverPath, "world_nether"), join(serverPath, "backups", timestamp, "world_nether"), err => {
+            if(err) return console.error(err);
+
+            ncp(join(serverPath, "world_the_end"), join(serverPath, "backups", timestamp, "world_the_end"), err => {
+              if(err) return console.error(err);
+
+              server.stdin.write("save-on\n");
+              send({});
+            });
+          });
+        });
+      });
+    });
+  });
 }, 5000), 1000);
 
 process.on("SIGTERM", stop);

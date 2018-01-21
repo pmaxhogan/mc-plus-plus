@@ -1,23 +1,12 @@
 dependencies:
-  pty.js: 0.3.1
+  ncp: 2.0.0
 packages:
-  /extend/1.2.1:
+  /ncp/2.0.0:
     dev: false
     resolution:
-      integrity: sha1-oPX9bPyDpf5J72mNYOyKYk3UV2w=
-  /nan/2.3.5:
-    dev: false
-    resolution:
-      integrity: sha1-gioNwmYpDOTNOhIoLKPn42Rmigg=
-  /pty.js/0.3.1:
-    dependencies:
-      extend: 1.2.1
-      nan: 2.3.5
-    dev: false
-    resolution:
-      integrity: sha1-gfW+0zLW5eeraFaI0boDc0ENUbU=
+      integrity: sha1-GVoh1sRuNh0vsSgbo4uR6d9727M=
 registry: 'https://registry.npmjs.org/'
 shrinkwrapMinorVersion: 4
 shrinkwrapVersion: 3
 specifiers:
-  pty.js: ^0.3.1
+  ncp: ^2.0.0
