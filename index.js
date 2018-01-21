@@ -1,3 +1,4 @@
+const fs = require("fs");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
@@ -22,6 +23,7 @@ let numPlayers = 0;
 let playersOnline = 0;
 
 let lines = [];
+let backups = [];
 
 const onLine = (regex, callback) => {
   lines.push([regex, callback]);
@@ -35,6 +37,8 @@ wss.on("connection", function connection(ws) {
   if(state === 1){
     ws.send({loadTime});
   }
+
+  ws.send({backups});
 
   ws.on("error", () => console.log("bye connection"));//why the heck https://github.com/websockets/ws/issues/1256
 
@@ -55,6 +59,16 @@ const setState = newState => {
   state = newState;
   send({newState: state});
 };
+
+const updateBackups = () => {
+  fs.readdir(join(serverPath, "backups"), (err, folders) => {
+    backups = folders;
+    console.log("backups", backups);
+    send({backups});
+  });
+};
+
+updateBackups();
 
 console.log("Path to server: ", resolve(process.argv[2]));
 
@@ -157,7 +171,7 @@ setInterval(() => {
               if(err) return console.error(err);
 
               server.stdin.write("save-on\n");
-              send({});
+              updateBackups();
             });
           });
         });
