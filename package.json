@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/programmer5000-com/mc-plus-plus#readme",
   "dependencies": {
-    "ncp": "^2.0.0",
+    "archiver": "^2.1.1",
+    "rimraf": "^2.6.2",
     "ws": "^4.0.0"
   }
 }

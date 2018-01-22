@@ -1,4 +1,5 @@
 const fs = require("fs");
+const archiver = require("archiver");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
@@ -21,6 +22,32 @@ const javaArgs = "-Xms1G -Xmx1G -XX:+UseConcMarkSweepGC -DIReallyKnowWhatIAmDoin
   let oldLog = console.log;
   console.log = (...args) => oldLog("MC++: ", ...args);
 })();
+
+const zipFolder = (folderName, dest) => new Promise((resolve, reject) => {
+  // create a file to stream archive data to.
+  var output = fs.createWriteStream(dest);
+  var archive = archiver("zip", {
+    zlib: { level: 9 } // Sets the compression level.
+  });
+
+  // listen for all archive data to be written
+  // "close" event is fired only when a file descriptor is involved
+  output.on("close", function() {
+    console.log("file size of archive", folderName, "is", archive.pointer() + " total bytes");
+    resolve();
+  });
+  // good practice to catch warnings (ie stat failures and other non-blocking errors)
+  archive.on("warning", function(err) {
+    // throw error
+    reject(err);
+  });
+  archive.on("error", function(err) {
+    reject(err);
+  });
+  archive.pipe(output);
+  archive.directory(folderName, false);
+  archive.finalize();
+});
 
 const wss = new WebSocket.Server({ port: 8081 });
 
@@ -67,13 +94,14 @@ const setState = newState => {
   send({newState: state});
 };
 
-const updateBackups = () => {
+const updateBackups = () => new Promise((resolve, reject) => {
   fs.readdir(join(serverPath, "backups"), (err, folders) => {
+    if(err) return reject(err);
     backups = folders;
     console.log("backups", backups);
     send({backups});
   });
-};
+});
 
 updateBackups();
 
@@ -168,17 +196,17 @@ const backup = () => {
       fs.mkdir(join(serverPath, "backups", timestamp), err => {
         if(err) return console.error(err);
 
-        ncp(join(serverPath, "world"), join(serverPath, "backups", timestamp, "world"), err => {
+        zipFolder(join(serverPath, "world"), join(serverPath, "backups", timestamp, "world.zip"), err => {
           if(err) return console.error(err);
 
-          ncp(join(serverPath, "world_nether"), join(serverPath, "backups", timestamp, "world_nether"), err => {
+          ncp(join(serverPath, "world_nether"), join(serverPath, "backups", timestamp, "world_nether.zip"), err => {
             if(err) return console.error(err);
 
-            ncp(join(serverPath, "world_the_end"), join(serverPath, "backups", timestamp, "world_the_end"), err => {
+            ncp(join(serverPath, "world_the_end"), join(serverPath, "backups", timestamp, "world_the_end.zip"), err => {
               if(err) return console.error(err);
 
               server.stdin.write("save-on\n");
-              updateBackups();
+              updateBackups().then(checkBackupDupes);
             });
           });
         });
@@ -187,9 +215,22 @@ const backup = () => {
   });
 };
 
+const checkBackupDupes = () => {
+  const timeStamps = backups.map(x=>[x.replace(/_/g, "-"), x]).map(x=>[new Date(x[0]), x[1]]);
+  timeStamps.reduce((arr, [timeStamp, fileName]) => {
+    const now = Date.now();
+    if(Date.now() - timeStamp.getTime() < 1000 * 60 * 10){//if the backup is less than 10 minutes old
+      rmBackup(timeStamp);
+    }
+    arr.push(timeStamp);
+  });
+};
+
+const rmBackup = fileName => {};
+
 setTimeout(() => {
   backup();
-  setInterval(backup, 1000 8 60);//every minute
+  setInterval(backup, 1000 * 60);//every minute
 }, 1000);
 
 process.on("SIGTERM", stop);
