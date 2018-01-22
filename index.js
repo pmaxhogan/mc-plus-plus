@@ -212,7 +212,7 @@ const backup = () => {
 
 const checkBackupDupes = () => {
   const timeStamps = backups.map(x=>[x.replace(/_/g, "-"), x]).
-  map(x=>[Date(x[0]), x[1]]);
+  map(x=>[new Date(Date.parse(x[0])), x[1]]);
   timeStamps.reduce((arr, [timeStamp, fileName]) => {
     console.log("arr is", arr);
     if(arr && arr[arr.length - 1]){
