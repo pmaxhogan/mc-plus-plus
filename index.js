@@ -4,6 +4,9 @@ const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
+
+const noop = () => {};
+
 try{
   fs.mkdirSync(join(serverPath, "backups"));
 }catch(e){
@@ -78,7 +81,7 @@ wss.on("connection", function connection(ws) {
 
 const send = (str, options, callback = () => {}) => {
     console.log("clients");
-    console.log("sending", JSON.stringify(str));
+    console.log("sending", JSON.stringify(str).slice(0, 500));
     wss.clients.forEach(c => {
       if (c.isAlive === false) return c.terminate();
         c.send(JSON.stringify(str), options, err => err && console.error("SWALLOWED", err));
@@ -95,8 +98,8 @@ const updateBackups = () => new Promise((resolve, reject) => {
   fs.readdir(join(serverPath, "backups"), (err, folders) => {
     if(err) return reject(err);
     backups = folders;
-    console.log("backups", backups);
     send({backups});
+    resolve();
   });
 });
 
@@ -186,11 +189,12 @@ const backup = () => {
   server.stdin.write("save-all\n");
   onLine(/Saved the world$/ig, () => {
     server.stdin.write("save-off\n");
-    onLine(/Turned off world auto-saving$/ig, () => {
+    onLine(/(Turned off world auto-saving|Saving is already turned off)$/ig, () => {
       const timestamp = (new Date()).toISOString().replace(/:/g, "_");
 
 
       fs.mkdir(join(serverPath, "backups", timestamp), err => {
+        if(err && err.code === "EEXIST") return;
         if(err) return console.error(err);
 
         zipFolder(join(serverPath, "world"), join(serverPath, "backups", timestamp, "world.zip")).then(() =>
@@ -207,17 +211,33 @@ const backup = () => {
 };
 
 const checkBackupDupes = () => {
-  const timeStamps = backups.map(x=>[x.replace(/_/g, "-"), x]).map(x=>[new Date(x[0]), x[1]]);
+  const timeStamps = backups.map(x=>[x.replace(/_/g, "-"), x]).
+  map(x=>[Date(x[0]), x[1]]);
   timeStamps.reduce((arr, [timeStamp, fileName]) => {
-    const now = Date.now();
-    if(Date.now() - timeStamp.getTime() < 1000 * 60 * 10){//if the backup is less than 10 minutes old
-      rmBackup(timeStamp);
+    console.log("arr is", arr);
+    if(arr && arr[arr.length - 1]){
+      const now = new Date();
+      const last = arr[arr.length - 1][0];
+
+      console.log(last, typeof last);
+
+      if(now.getTime() - timeStamp.getTime() < 1000 * 60 * 10
+  && last.toUTCString() === now.toUTCString()){//if the backup is less than 10 minutes old & has a dupe in the same minute
+        rmBackup(timeStamp);
+        console.log("destroying backup");
+      }
     }
     arr.push(timeStamp);
-  });
+    return arr;
+  }, []);
 };
 
-const rmBackup = fileName => {};
+const rmBackup = fileName => {
+  const dir = join(serverPath, "backups", timestamp);
+  fs.readdir(dir, files => {
+    files.forEach(file=>fs.unlink(file, noop));
+  });
+};
 
 setTimeout(() => {
   backup();
