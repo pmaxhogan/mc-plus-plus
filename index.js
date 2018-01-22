@@ -4,6 +4,13 @@ const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
 const ncp = require("ncp").ncp;
 const serverPath = dirname(resolve(process.argv[2]));
+try{
+  fs.mkdirSync(join(serverPath, "backups"));
+}catch(e){
+  if(e.code !== "EEXIST"){//if the dir already exists than everything is fine, otherwise we might not have permissions to add a dir
+    throw e;
+  }
+}
 
 ncp.limit = 16;
 
@@ -40,7 +47,7 @@ wss.on("connection", function connection(ws) {
 
   ws.send({backups});
 
-  ws.on("error", () => console.log("bye connection"));//why the heck https://github.com/websockets/ws/issues/1256
+  ws.on("error", () => console.log("rip connection"));//why the heck https://github.com/websockets/ws/issues/1256
 
   setState(state);
 });
@@ -119,8 +126,8 @@ const procLine = line => {
   const started = line.match(/Done \((.*?)\)! For help, type "help" or "\?"/);
   if(started){
     setState(1);
-    send({loadTime: match[1]});
-    loadTime = match[1];
+    send({loadTime: started[1]});
+    loadTime = started[1];
   }
 
   lines.forEach(lineToCompare => {
@@ -149,14 +156,14 @@ const stop = () => {
   setState(2);
 };
 
-setTimeout(() =>
-setInterval(() => {
+const backup = () => {
   if(state !== 1) return;
   server.stdin.write("save-all\n");
   onLine(/Saved the world$/ig, () => {
     server.stdin.write("save-off\n");
     onLine(/Turned off world auto-saving$/ig, () => {
-      const timestamp = (new Date()).toISOString();
+      const timestamp = (new Date()).toISOString().replace(/:/g, "_");
+
 
       fs.mkdir(join(serverPath, "backups", timestamp), err => {
         if(err) return console.error(err);
@@ -178,7 +185,12 @@ setInterval(() => {
       });
     });
   });
-}, 5000), 1000);
+};
+
+setTimeout(() => {
+  backup();
+  setInterval(backup, 1000 8 60);//every minute
+}, 1000);
 
 process.on("SIGTERM", stop);
 process.on("SIGINT", stop);

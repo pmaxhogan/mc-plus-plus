@@ -30,4 +30,5 @@ You will periodically get JSON messages sent. These will have one or more proper
 
 
  - `backups`: Array  
-  This is an array of ISO 8601 timestamps representing all backups of the world folders. This will be send on initial connection.
+  This is an array of ISO 8601 timestamps representing all backups of the world folders. This will be send on initial connection. **Note that the
+`:`s in the ISO string are replaced with `_` because **~~LoseDoze~~** Windows doesn't like `:` in file names.**
