@@ -3,7 +3,6 @@ const archiver = require("archiver");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
-const ncp = require("ncp").ncp;
 const serverPath = dirname(resolve(process.argv[2]));
 try{
   fs.mkdirSync(join(serverPath, "backups"));
@@ -12,8 +11,6 @@ try{
     throw e;
   }
 }
-
-ncp.limit = 16;
 
 const javaArgs = "-Xms1G -Xmx1G -XX:+UseConcMarkSweepGC -DIReallyKnowWhatIAmDoingISwear -server -jar";
 
@@ -196,20 +193,14 @@ const backup = () => {
       fs.mkdir(join(serverPath, "backups", timestamp), err => {
         if(err) return console.error(err);
 
-        zipFolder(join(serverPath, "world"), join(serverPath, "backups", timestamp, "world.zip"), err => {
-          if(err) return console.error(err);
+        zipFolder(join(serverPath, "world"), join(serverPath, "backups", timestamp, "world.zip")).then(() =>
 
-          ncp(join(serverPath, "world_nether"), join(serverPath, "backups", timestamp, "world_nether.zip"), err => {
-            if(err) return console.error(err);
+        zipFolder(join(serverPath, "world_nether"), join(serverPath, "backups", timestamp, "world_nether.zip")).then(() =>
 
-            ncp(join(serverPath, "world_the_end"), join(serverPath, "backups", timestamp, "world_the_end.zip"), err => {
-              if(err) return console.error(err);
-
-              server.stdin.write("save-on\n");
-              updateBackups().then(checkBackupDupes);
-            });
-          });
-        });
+        zipFolder(join(serverPath, "world_the_end"), join(serverPath, "backups", timestamp, "world_the_end.zip")).then(() => {
+          server.stdin.write("save-on\n");
+          updateBackups().then(checkBackupDupes);
+        }))).catch(console.error);//let's go promises!
       });
     });
   });
@@ -230,7 +221,7 @@ const rmBackup = fileName => {};
 
 setTimeout(() => {
   backup();
-  setInterval(backup, 1000 * 60);//every minute
+  setInterval(backup, 1000 * 20);//every minute
 }, 1000);
 
 process.on("SIGTERM", stop);
