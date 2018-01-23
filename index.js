@@ -5,7 +5,7 @@ const { resolve, dirname, join } = require("path");
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
 
-const noop = () => {};
+const noop = err => {if(err) console.error(err);};
 
 try{
   fs.mkdirSync(join(serverPath, "backups"));
@@ -59,8 +59,8 @@ let playersOnline = 0;
 let lines = [];
 let backups = [];
 
-const onLine = (regex, callback) => {
-  lines.push([regex, callback]);
+const onLine = (regex, callback, delAfterFirstCall) => {
+  lines.push([regex, callback, delAfterFirstCall]);
 };
 
 wss.on("connection", function connection(ws) {
@@ -157,11 +157,15 @@ const procLine = line => {
     send({loadTime: started[1]});
     loadTime = started[1];
   }
-
-  lines.forEach(lineToCompare => {
+  lines = lines.filter(Boolean);
+  lines.forEach((lineToCompare, idx) => {
+    if(!lineToCompare) return;
     const match = line.match(lineToCompare[0]);
     if(match){
       lineToCompare[1](...match);
+      if(lineToCompare[2]){
+        lines[idx] = undefined;
+      }
     }
   });
 };
@@ -206,28 +210,24 @@ const backup = () => {
           updateBackups().then(checkBackupDupes);
         }))).catch(console.error);//let's go promises!
       });
-    });
-  });
+    }, true);
+  }, true);
 };
 
 const checkBackupDupes = () => {
   const now = new Date();
   const timeStamps = backups;
-  console.log("timeStamps is", JSON.stringify(timeStamps).slice(0, 500), "backups is", backups.slice(0, 500));
   timeStamps.reduce((arr, fileName) => {
     const timeStamp = new Date(fileName.replace(/_/g, ":"));
-    console.log("timeStamp", timeStamp);
     if(arr && arr[arr.length - 1]){
       const last = arr[arr.length - 1];
 
-      console.log("now.getTime() - timeStamp.getTime() < 1000 * 60 * 10", now.getTime() - timeStamp.getTime() < 1000 * 60 * 10);
-      console.log("last.toUTCString()", last.toUTCString(), "now.toUTCString()", now.toUTCString());
-
-      if(now.getTime() - timeStamp.getTime() < 1000 * 60 * 10
-  && last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 10 minutes old & has a dupe in the same minute
-        process.exit();
-        rmBackup(timeStamp);
-        console.log("destroying backup");
+      if(now.getTime() - timeStamp.getTime() < 1000 * 60 * 10){
+        if(last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 10 minutes old & has a dupe in the same minute
+          rmBackup(fileName);
+        }
+      }else{
+        rmBackup(fileName);
       }
     }
     arr.push(timeStamp);
@@ -236,15 +236,16 @@ const checkBackupDupes = () => {
 };
 
 const rmBackup = fileName => {
-  const dir = join(serverPath, "backups", timestamp);
-  fs.readdir(dir, files => {
-    files.forEach(file=>fs.unlink(file, noop));
+  const dir = join(serverPath, "backups", fileName);
+  console.log("rm -rf ", dir);
+  fs.readdir(dir, (err, files) => {
+    files.forEach(file=>fs.unlink(join(dir, file), noop));
   });
 };
 
 setTimeout(() => {
   backup();
-  setInterval(backup, 1000 * 20);//every minute
+  setInterval(backup, 1000 * 60);//every minute
 }, 1000);
 
 process.on("SIGTERM", stop);
