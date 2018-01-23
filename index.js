@@ -211,19 +211,20 @@ const backup = () => {
 };
 
 const checkBackupDupes = () => {
+  const now = new Date();
   const timeStamps = backups;
   console.log("timeStamps is", JSON.stringify(timeStamps).slice(0, 500), "backups is", backups.slice(0, 500));
   timeStamps.reduce((arr, fileName) => {
     const timeStamp = new Date(fileName.replace(/_/g, ":"));
     console.log("timeStamp", timeStamp);
     if(arr && arr[arr.length - 1]){
-      const now = new Date();
       const last = arr[arr.length - 1];
 
-      console.log("last", last, typeof last);
+      console.log("now.getTime() - timeStamp.getTime() < 1000 * 60 * 10", now.getTime() - timeStamp.getTime() < 1000 * 60 * 10);
+      console.log("last.toUTCString()", last.toUTCString(), "now.toUTCString()", now.toUTCString());
 
       if(now.getTime() - timeStamp.getTime() < 1000 * 60 * 10
-  && last.toUTCString() === now.toUTCString()){//if the backup is less than 10 minutes old & has a dupe in the same minute
+  && last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 10 minutes old & has a dupe in the same minute
         process.exit();
         rmBackup(timeStamp);
         console.log("destroying backup");
