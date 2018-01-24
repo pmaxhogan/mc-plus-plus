@@ -228,16 +228,22 @@ const checkBackupDupes = () => {
         if(idx === idx2) return;
         otherDate = new Date(other.replace(/_/g, ":"));
 
+        let delete = false;
+
         if(elapsedTime < 1000 * 60 * 30 + 1000){
           if(otherDate.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
-            rmBackup(other);
+            delete = true;
           }
         }else if(elapsedTime < 1000 * 60 * 60 * 24 + 10000){
           if(otherDate.toDateString() === timeStamp.toDateString() && otherDate.getUTCHours() === timeStamp.getUTCHours()){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
-            rmBackup(other);
+            delete = true;
           }
         }else if(otherDate.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
+          delete = true;
+        }
+        if(delete){
           rmBackup(other);
+          timeStamps.splice(idx2, 1);
         }
       });
     }
@@ -261,7 +267,7 @@ const rmBackup = fileName => {
     Promise.all(promises).then(res => {
       console.log("res", res);
       fs.rmdir(dir, noop);
-    }).catch(console.error);
+    }).catch(() => {});
   });
 };
 
