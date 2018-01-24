@@ -228,20 +228,21 @@ const checkBackupDupes = () => {
         if(idx === idx2) return;
         otherDate = new Date(other.replace(/_/g, ":"));
 
-        let delete = false;
+        // console.log("otherDate.toDateString()", otherDate.toDateString(), "timeStamp.toDateString()", timeStamp.toDateString());
+        let deleteIt = false;
 
         if(elapsedTime < 1000 * 60 * 30 + 1000){
           if(otherDate.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
-            delete = true;
+            deleteIt = true;
           }
         }else if(elapsedTime < 1000 * 60 * 60 * 24 + 10000){
           if(otherDate.toDateString() === timeStamp.toDateString() && otherDate.getUTCHours() === timeStamp.getUTCHours()){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
-            delete = true;
+            deleteIt = true;
           }
         }else if(otherDate.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
-          delete = true;
+          deleteIt = true;
         }
-        if(delete){
+        if(deleteIt){
           rmBackup(other);
           timeStamps.splice(idx2, 1);
         }
