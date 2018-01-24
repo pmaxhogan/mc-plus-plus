@@ -218,24 +218,28 @@ const checkBackupDupes = () => {
   const now = new Date();
   const timeStamps = backups;
 
-  timeStamps.reduce((arr, fileName) => {
+  timeStamps.reduce((arr, fileName, idx) => {
     const timeStamp = new Date(fileName.replace(/_/g, ":"));
     if(arr && arr[arr.length - 1]){
-      const last = arr[arr.length - 1];
 
-      const elapsedTime = now.getTime() - last.getTime();
+      const elapsedTime = now.getTime() - timeStamp.getTime();
 
-      if(elapsedTime < 1000 * 60 * 30 + 1000){
-        if(last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
-          rmBackup(fileName);
+      timeStamps.forEach((other, idx2) => {
+        if(idx === idx2) return;
+        otherDate = new Date(other.replace(/_/g, ":"));
+
+        if(elapsedTime < 1000 * 60 * 30 + 1000){
+          if(otherDate.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
+            rmBackup(other);
+          }
+        }else if(elapsedTime < 1000 * 60 * 60 * 24 + 10000){
+          if(otherDate.toDateString() === timeStamp.toDateString() && otherDate.getUTCHours() === timeStamp.getUTCHours()){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
+            rmBackup(other);
+          }
+        }else if(otherDate.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
+          rmBackup(other);
         }
-      }else if(elapsedTime < 1000 * 60 * 60 * 24 + 10000){
-        if(last.toDateString() === timeStamp.toDateString() && last.getUTCHours() === timeStamp.getUTCHours()){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
-          rmBackup(fileName);
-        }
-      }else if(last.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
-        rmBackup(fileName);
-      }
+      });
     }
     arr.push(timeStamp);
     return arr;
