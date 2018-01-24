@@ -268,6 +268,7 @@ const rmBackup = fileName => {
     Promise.all(promises).then(res => {
       console.log("res", res);
       fs.rmdir(dir, noop);
+      send({backups});
     }).catch(() => {});
   });
 };
