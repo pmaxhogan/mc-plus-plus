@@ -222,11 +222,17 @@ const checkBackupDupes = () => {
     if(arr && arr[arr.length - 1]){
       const last = arr[arr.length - 1];
 
-      if(now.getTime() - timeStamp.getTime() < 1000 * 60 * 10){
-        if(last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 10 minutes old & has a dupe in the same minute
+      const elapsedTime = now.getTime() - timeStamp.getTime();
+
+      if(elapsedTime < 1000 * 60 * 30 + 1000){
+        if(last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
           rmBackup(fileName);
         }
-      }else{
+      }else if(elapsedTime < 1000 * 60 * 60 * 24 + 10000){
+        if(last.toDateString() === timeStamp.toDateString() && last.getUTCHours() === timeStamp.getUTCHours()){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
+          rmBackup(fileName);
+        }
+      }else if(last.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
         rmBackup(fileName);
       }
     }
@@ -238,8 +244,19 @@ const checkBackupDupes = () => {
 const rmBackup = fileName => {
   const dir = join(serverPath, "backups", fileName);
   console.log("rm -rf ", dir);
+  const unlinkPromise = file => new Promise((resolve, reject) => {
+    fs.unlink(file, err => {
+      if(err) return console.error(err);
+      resolve("success");
+    });
+  });
+  let promises = [];
   fs.readdir(dir, (err, files) => {
-    files.forEach(file=>fs.unlink(join(dir, file), noop));
+    files.forEach(file => promises.push(unlinkPromise(join(dir, file))));
+    Promise.all(promises).then(res => {
+      console.log("res", res);
+      fs.rmdir(dir, noop);
+    }).catch(console.error);
   });
 };
 

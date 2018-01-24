@@ -34,3 +34,5 @@ You will periodically get JSON messages sent. These will have one or more proper
 `:`s in the ISO string are replaced with `_` because **~~LoseDoze~~** Windows doesn't like `:` in file names.**
   #### Backup scheduling
   - Once every minute for the past 10 minutes
+  - Once every hour for the past day
+  - Once every day
