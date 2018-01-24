@@ -268,15 +268,16 @@ const rmBackup = fileName => {
     Promise.all(promises).then(res => {
       console.log("res", res);
       fs.rmdir(dir, noop);
-      send({backups});
     }).catch(() => {});
   });
 };
 
 setTimeout(() => {
   backup();
-  setInterval(backup, 1000 * 60);//every minute
+  setInterval(backup, 1000 * 30);//every minute
 }, 1000);
+
+setInterval(() => send({backups}), 1000 * 20);
 
 process.on("SIGTERM", stop);
 process.on("SIGINT", stop);
