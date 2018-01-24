@@ -217,12 +217,13 @@ const backup = () => {
 const checkBackupDupes = () => {
   const now = new Date();
   const timeStamps = backups;
+
   timeStamps.reduce((arr, fileName) => {
     const timeStamp = new Date(fileName.replace(/_/g, ":"));
     if(arr && arr[arr.length - 1]){
       const last = arr[arr.length - 1];
 
-      const elapsedTime = now.getTime() - timeStamp.getTime();
+      const elapsedTime = now.getTime() - last.getTime();
 
       if(elapsedTime < 1000 * 60 * 30 + 1000){
         if(last.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
