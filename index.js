@@ -219,32 +219,28 @@ const checkBackupDupes = () => {
   const timeStamps = backups;
 
   timeStamps.reduce((arr, fileName, idx) => {
+    if(!fileName) return arr;
     const timeStamp = new Date(fileName.replace(/_/g, ":"));
-    if(arr && arr[arr.length - 1]){
+    if(arr){
 
       const elapsedTime = now.getTime() - timeStamp.getTime();
 
       timeStamps.forEach((other, idx2) => {
-        if(idx === idx2) return;
+        if(!other || idx === idx2) return;
         otherDate = new Date(other.replace(/_/g, ":"));
-
-        // console.log("otherDate.toDateString()", otherDate.toDateString(), "timeStamp.toDateString()", timeStamp.toDateString());
+        //if(otherDate.getTime() > timeStamp.getTime()) return;
         let deleteIt = false;
-
-        if(elapsedTime < 1000 * 60 * 30 + 1000){
-          if(otherDate.toUTCString() === timeStamp.toUTCString()){//if the backup is less than 30 minutes old (w/ 1s buffer) & has a dupe in the same minute
-            deleteIt = true;
-          }
-        }else if(elapsedTime < 1000 * 60 * 60 * 24 + 10000){
-          if(otherDate.toDateString() === timeStamp.toDateString() && otherDate.getUTCHours() === timeStamp.getUTCHours()){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
+        if(elapsedTime < 1000 * 60 * 60 * 24){
+          if(otherDate.toDateString() === timeStamp.toDateString() && Math.abs(otherDate.getTime() - timeStamp.getTime()) < 1000 * 60 * 60){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
             deleteIt = true;
           }
         }else if(otherDate.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
+          console.log("=====================SAME DAY DUPE");
           deleteIt = true;
         }
         if(deleteIt){
           rmBackup(other);
-          timeStamps.splice(idx2, 1);
+          timeStamps[idx2] = undefined;
         }
       });
     }
@@ -277,7 +273,7 @@ setTimeout(() => {
   setInterval(backup, 1000 * 30);//every minute
 }, 1000);
 
-setInterval(() => send({backups}), 1000 * 20);
+setInterval(() => send({backups: backups.filter(Boolean)}), 1000 * 20);
 
 process.on("SIGTERM", stop);
 process.on("SIGINT", stop);
