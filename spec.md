@@ -41,3 +41,6 @@ NOT IMPLEMENTED YET
 
  - `setBackup`: String
   The current world will be rolled back to this backup.
+
+ - `op`: String
+  Give OP permissions to the player with the name or UUID of the String specified.
