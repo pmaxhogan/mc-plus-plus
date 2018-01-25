@@ -3,7 +3,7 @@ The WebSocket server allows you to get information and updates from the server, 
 
 You will periodically get JSON messages sent. These will have one or more properties explaining something changing on the server, etc. These are the list of properties you could receive. For forwards compatibility, fail gracefully when you recieve a property you don't understand.
 
-## Properties
+## Properties You Will Recieve
 - `newState`: Number  
     This is a Number explaining the new state of the server. You will get this when you initially connect to the socket. Possible values are:
     - 0: The server is starting.
@@ -30,7 +30,11 @@ You will periodically get JSON messages sent. These will have one or more proper
 
 
  - `backups`: Array  
-  This is an array of ISO 8601 timestamps representing all backups of the world folders. This will be send on initial connection. **Note that the
+  This is an array of ISO 8601 timestamps representing all backups of the world folders. This will be send on initial connection, and quite frequently after. **Note that the
 `:`s in the ISO string are replaced with `_` because **~~LoseDoze~~** Windows doesn't like `:` in file names.**
   #### Backup scheduling
   At most one backup is stored one hour *within the past 24 hours* (1000 * 60 * 60 ms, not 1 clock hour). After the past 24 hours, at most one backup is stored per calendar day. Yeah, I know the backup system is weird, but it was the easiest option that actually made come kind of sense. If someone is interested in adding a PR that fixes this, it'd be great. I might also fix it later.
+
+## Properties You Can Send
+
+wip
