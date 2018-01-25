@@ -33,6 +33,4 @@ You will periodically get JSON messages sent. These will have one or more proper
   This is an array of ISO 8601 timestamps representing all backups of the world folders. This will be send on initial connection. **Note that the
 `:`s in the ISO string are replaced with `_` because **~~LoseDoze~~** Windows doesn't like `:` in file names.**
   #### Backup scheduling
-  - Once every minute for the past 10 minutes
-  - Once every hour for the past day
-  - Once every day
+  At most one backup is stored one hour *within the past 24 hours* (1000 * 60 * 60 ms, not 1 clock hour). After the past 24 hours, at most one backup is stored per calendar day. Yeah, I know the backup system is weird, but it was the easiest option that actually made come kind of sense. If someone is interested in adding a PR that fixes this, it'd be great. I might also fix it later.
