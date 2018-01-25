@@ -231,11 +231,10 @@ const checkBackupDupes = () => {
         //if(otherDate.getTime() > timeStamp.getTime()) return;
         let deleteIt = false;
         if(elapsedTime < 1000 * 60 * 60 * 24){
-          if(otherDate.toDateString() === timeStamp.toDateString() && Math.abs(otherDate.getTime() - timeStamp.getTime()) < 1000 * 60 * 60){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
+          if(Math.abs(otherDate.getTime() - timeStamp.getTime()) < 1000 * 60 * 60){//if the backup is less than a day old (w/ 10s buffer) and has a dupe in the same hour
             deleteIt = true;
           }
-        }else if(otherDate.toDateString() === timeStamp.toDateString()){//if the backup has a dupe in the same day
-          console.log("=====================SAME DAY DUPE");
+        }else if(Math.abs(otherDate.getTime() - timeStamp.getTime()) < 1000 * 60 * 60* 24){//if the backup has a dupe in the same day
           deleteIt = true;
         }
         if(deleteIt){
