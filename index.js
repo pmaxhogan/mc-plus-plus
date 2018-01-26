@@ -2,6 +2,7 @@ const fs = require("fs");
 const archiver = require("archiver");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
+const StaticServer = require('static-server');
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
 
@@ -69,22 +70,21 @@ wss.on("connection", function connection(ws) {
   });
 
   if(state === 1){
-    ws.send({loadTime});
+    send({loadTime});
   }
 
-  ws.send({backups});
+  send({backups});
 
   ws.on("error", () => console.log("rip connection"));//why the heck https://github.com/websockets/ws/issues/1256
 
   setState(state);
 });
 
-const send = (str, options, callback = () => {}) => {
-    console.log("clients");
-    console.log("sending", JSON.stringify(str).slice(0, 500));
+const send = (obj, options, callback = () => {}) => {
+    //console.log("sending", JSON.stringify(str).slice(0, 500));
     wss.clients.forEach(c => {
       if (c.isAlive === false) return c.terminate();
-        c.send(JSON.stringify(str), options, err => err && console.error("SWALLOWED", err));
+        c.send(JSON.stringify(obj), options, err => err && console.error("SWALLOWED", err));
     });
     callback();
 };
@@ -118,7 +118,6 @@ const start = () => {
   server = execFile("java", [...javaArgs.split(" "), resolve(process.argv[2])], {
     cwd: serverPath
   });
-
 
   server.stderr.on("data", data=>{
     process.stdout.write("ERR: " + data);
@@ -277,3 +276,18 @@ setInterval(() => send({backups: backups.filter(Boolean)}), 1000 * 20);
 process.on("SIGTERM", stop);
 process.on("SIGINT", stop);
 process.on("SIGBREAK", stop);
+
+
+var server = new StaticServer({
+  rootPath: "public",            // required, the root of the server file tree
+  name: "MC++",   // optional, will set "X-Powered-by" HTTP header
+  port: 8082,               // optional, defaults to a random port
+  //host: "10.0.0.100",       // optional, defaults to any interface
+  templates: {
+    notFound: "404.html"    // optional, defaults to undefined
+  }
+});
+
+server.start(function () {
+  console.log('Server listening to', server.port);
+});
