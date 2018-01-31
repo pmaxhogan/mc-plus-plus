@@ -2,9 +2,9 @@ const fs = require("fs");
 const archiver = require("archiver");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
-const StaticServer = require('static-server');
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
+const http = require("http");
 
 const noop = err => {if(err) console.error(err);};
 
@@ -50,7 +50,7 @@ const zipFolder = (folderName, dest) => new Promise((resolve, reject) => {
   archive.finalize();
 });
 
-const wss = new WebSocket.Server({ port: 8081 });
+const wss = new WebSocket.Server({noServer: true});
 
 let loadTime = "";
 let state = 0;//0 = loading, 1 = ready, 2 = shutting down
@@ -63,6 +63,19 @@ let backups = [];
 const onLine = (regex, callback, delAfterFirstCall) => {
   lines.push([regex, callback, delAfterFirstCall]);
 };
+
+
+
+const html = fs.readFileSync("public/index.html");
+const httpServer = http.createServer(function (request, response) {
+    response.writeHeader(200, { "Content-Type": "text/html" });
+    response.write(html);
+    response.end();
+});
+
+httpServer.listen(8081);
+httpServer.on('upgrade', wss.handleUpgrade);
+
 
 wss.on("connection", function connection(ws) {
   ws.on("message", function incoming(message) {
@@ -268,7 +281,7 @@ const rmBackup = fileName => {
 
 setTimeout(() => {
   backup();
-  setInterval(backup, 1000 * 30);//every minute
+  setInterval(backup, 1000 * 60 * 5);//every 5 minutes
 }, 1000);
 
 setInterval(() => send({backups: backups.filter(Boolean)}), 1000 * 20);
@@ -276,18 +289,3 @@ setInterval(() => send({backups: backups.filter(Boolean)}), 1000 * 20);
 process.on("SIGTERM", stop);
 process.on("SIGINT", stop);
 process.on("SIGBREAK", stop);
-
-
-var server = new StaticServer({
-  rootPath: "public",            // required, the root of the server file tree
-  name: "MC++",   // optional, will set "X-Powered-by" HTTP header
-  port: 8082,               // optional, defaults to a random port
-  //host: "10.0.0.100",       // optional, defaults to any interface
-  templates: {
-    notFound: "404.html"    // optional, defaults to undefined
-  }
-});
-
-server.start(function () {
-  console.log('Server listening to', server.port);
-});
