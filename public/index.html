@@ -1,7 +1,26 @@
 <!DOCTYPE html>
 <html>
-  <head></head>
-  <body>
-    Hello, World!
-  </body>
+<head></head>
+<body>
+  <h1>Your Minecraft Server Config</h1>
+  <section id="status">
+    <h2>Status</h2>
+    <div data-state="0">State is 0</div>
+    <div data-state="1">State is 0</div>
+    <div data-state="2">State is 0</div>
+  </section>
+  <script>
+  const ws = new WebSocket("ws://" + location.host);
+
+  // Connection opened
+  ws.addEventListener("open", function (event) {
+      ws.send("Hello Server!");
+  });
+
+  // Listen for messages
+  ws.addEventListener("message", function (event) {
+      console.log("Message from server ", event.data);
+  });
+  </script>
+</body>
 </html>

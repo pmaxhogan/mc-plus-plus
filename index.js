@@ -49,9 +49,6 @@ const zipFolder = (folderName, dest) => new Promise((resolve, reject) => {
   archive.directory(folderName, false);
   archive.finalize();
 });
-
-const wss = new WebSocket.Server({noServer: true});
-
 let loadTime = "";
 let state = 0;//0 = loading, 1 = ready, 2 = shutting down
 let numPlayers = 0;
@@ -65,7 +62,6 @@ const onLine = (regex, callback, delAfterFirstCall) => {
 };
 
 
-
 const html = fs.readFileSync("public/index.html");
 const httpServer = http.createServer(function (request, response) {
     response.writeHeader(200, { "Content-Type": "text/html" });
@@ -73,8 +69,10 @@ const httpServer = http.createServer(function (request, response) {
     response.end();
 });
 
+const wss = new WebSocket.Server({server: httpServer});
+
 httpServer.listen(8081);
-httpServer.on('upgrade', wss.handleUpgrade);
+// httpServer.on('upgrade', wss.handleUpgrade);
 
 
 wss.on("connection", function connection(ws) {
