@@ -56,6 +56,7 @@ let playersOnline = 0;
 
 let lines = [];
 let backups = [];
+let port;
 
 const onLine = (regex, callback, delAfterFirstCall) => {
   lines.push([regex, callback, delAfterFirstCall]);
@@ -85,6 +86,10 @@ wss.on("connection", function connection(ws) {
   }
 
   send({backups});
+
+  if(port){
+    send({port});
+  }
 
   ws.on("error", () => console.log("rip connection"));//why the heck https://github.com/websockets/ws/issues/1256
 
@@ -197,6 +202,11 @@ const stop = () => {
   }
   setState(2);
 };
+
+onLine(/Starting Minecraft server on .*:(\d+)/g, (_, parsedPort) => {
+  port = parseInt(parsedPort);
+  send({port});
+});
 
 const backup = () => {
   if(state !== 1) return;
