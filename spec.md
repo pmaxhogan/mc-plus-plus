@@ -38,6 +38,9 @@ You will periodically get JSON messages sent. These will have one or more proper
  - `port`: Number
   This is the port that the server is running. If the server has announced it's port yet, it will be sent on connection. Also, the port will be send whenever it is announced or is changed.
 
+ - `correctAuth`: Boolean
+  This will be `true` if auth from `auth` was correct, otherwise `false`.
+
 ## Properties You Can Send
 
 NOT IMPLEMENTED YET

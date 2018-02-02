@@ -14,6 +14,13 @@
     section p:first-of-type{
       font-style: italic;
     }
+    #login{
+      position: fixed;
+      width: 100vw;
+      top: 0;
+      height: 100vh;
+      background: white;
+    }
   </style>
 </head>
 <body>
@@ -43,7 +50,12 @@
       </tbody>
     </table>
   </section>
-
+  <section id="login">
+      <h2>That action requires you to log in. Please enter a username &amp; password.</h2>
+      <form action="">
+  	<input id="username" placeholder="Username">
+      <input id="password" type="password" placeholder="Password"><button>Let's go!</button>
+  </form></section>
   <script>
     const $ = sel => document.querySelector(sel);
     const stateDivs = document.querySelectorAll("#status [data-state]");

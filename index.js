@@ -16,6 +16,18 @@ try{
   }
 }
 
+let auth = [];
+
+try{
+  auth = require("./auth.json");
+}catch(e){
+  if(e.code === "ENOENT"){
+    fs.writeFileSync("auth.json", {});
+  }else{
+    throw e;
+  }
+}
+
 const javaArgs = "-Xms1G -Xmx1G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=50 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:InitiatingHeapOccupancyPercent=10 -XX:G1MixedGCLiveThresholdPercent=50 -XX:+AggressiveOpts -DIReallyKnowWhatIAmDoingISwear -server -jar";//a crapton of jvm args. i hope they're useful!
 //https://www.spigotmc.org/threads/guide-optimizing-spigot-remove-lag-fix-tps-improve-performance.21726/page-10#post-1055873
 
@@ -78,7 +90,25 @@ httpServer.listen(8081);
 
 wss.on("connection", function connection(ws) {
   ws.on("message", function incoming(message) {
-    console.log("received: %s", message);
+    try{
+      const data = JSON.parse(message);
+      Object.entries(data).forEach(([key, value]) => {
+        switch (key){
+          case "auth":
+            value.username;
+            value.password;
+            const correctAuth = auth.some(user => {
+              if(user.username === value.username && user.password === value.password){
+                return true;
+              }
+            });
+            ws.send({correctAuth});
+          break;
+        }
+      });
+    }catch(e){
+      console.error(e);
+    }
   });
 
   if(state === 1){
@@ -149,7 +179,6 @@ const start = () => {
   });
   server.stdout.pipe(process.stdout);
   process.stdin.pipe(server.stdin);
-
 
   server.on("exit", (code, signal) => {
     console.log("The server has stopped.", code, signal);
