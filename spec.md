@@ -43,6 +43,11 @@ You will periodically get JSON messages sent. These will have one or more proper
 
 ## Properties You Can Send
 
+  - `auth`: Object
+   - `username`: String
+   - `password`: String
+   Try to see if a username / password combo is correct. You be responded with `correctAuth` shortly.
+
 NOT IMPLEMENTED YET
 
  - `setBackup`: String

@@ -53,15 +53,17 @@
   <section id="login">
       <h2>That action requires you to log in. Please enter a username &amp; password.</h2>
       <form action="">
-  	<input id="username" placeholder="Username">
-      <input id="password" type="password" placeholder="Password"><button>Let's go!</button>
-  </form></section>
+  	     <input id="username" placeholder="Username">
+         <input id="password" type="password" placeholder="Password"><button>Let's go!</button>
+      </form>
+    </section>
   <script>
     const $ = sel => document.querySelector(sel);
     const stateDivs = document.querySelectorAll("#status [data-state]");
     const tbody = $("#backups tbody");
     const portContainer = $("#port-container");
     const port = $("#port");
+    const form = $("form");
 
     const assert = (data, func) => {
       if(!func(data)){
@@ -108,6 +110,10 @@
         }
       });
     });
+
+    form.onsubmit = () => {
+      ws.send(JSON.stringify({}));
+    };
   </script>
 </body>
 </html>
