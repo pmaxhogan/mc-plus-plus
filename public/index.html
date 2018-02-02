@@ -22,6 +22,7 @@
     <div data-state="0" hidden>Starting</div>
     <div data-state="1" hidden>Ready</div>
     <div data-state="2" hidden>Shutting down</div>
+    <div id = "port-container" hidden>Server running on <span id = "port">unknown</span></div>
   </section>
   <section id="backups">
     <h2>Backups</h2>
@@ -44,6 +45,9 @@
     const $ = sel => document.querySelector(sel);
     const stateDivs = document.querySelectorAll("#status [data-state]");
     const tbody = $("#backups tbody");
+    const portContainer = $("#port-container");
+    const port = $("#port");
+
     const assert = (data, func) => {
       if(!func(data)){
         throw new Error("ASSERT: data " + data + " did not match " + func);
@@ -81,6 +85,10 @@
                 tbody.appendChild(tr);
               });
             }, 0);
+          break;
+          case "port":
+            portContainer.hidden = false;
+            port.innerText = location.hostName + value;
           break;
         }
       });
