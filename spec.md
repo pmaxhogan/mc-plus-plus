@@ -35,6 +35,9 @@ You will periodically get JSON messages sent. These will have one or more proper
   #### Backup scheduling
   At most one backup is stored one hour *within the past 24 hours* (1000 * 60 * 60 ms, not 1 clock hour). After the past 24 hours, at most one backup is stored per calendar day. Yeah, I know the backup system is weird, but it was the easiest option that actually made come kind of sense. If someone is interested in adding a PR that fixes this, it'd be great. I might also fix it later.
 
+ - `port`: Number
+  This is the port that the server is running. If the server has announced it's port yet, it will be sent on connection. Also, the port will be send whenever it is announced or is changed.
+
 ## Properties You Can Send
 
 NOT IMPLEMENTED YET
