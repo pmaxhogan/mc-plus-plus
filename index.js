@@ -203,7 +203,7 @@ const stop = () => {
   setState(2);
 };
 
-onLine(/Starting Minecraft server on .*:(\d+)/g, (_, parsedPort) => {
+onLine(/Starting Minecraft server on .*:(\d+)/i, (_, parsedPort) => {
   port = parseInt(parsedPort);
   send({port});
 });
