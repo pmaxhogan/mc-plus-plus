@@ -1,26 +1,88 @@
 <!DOCTYPE html>
 <html>
-<head></head>
+<head>
+
+  <style>
+    table{
+
+      border-collapse: collapse;
+    }
+    td, th {
+      border: 1px solid;
+      margin: 0;
+    }
+  </style>
+</head>
 <body>
   <h1>Your Minecraft Server Config</h1>
   <section id="status">
     <h2>Status</h2>
-    <div data-state="0">State is 0</div>
-    <div data-state="1">State is 0</div>
-    <div data-state="2">State is 0</div>
+    <div data-state="-1">Loading...</div>
+    <div data-state="0" hidden>Starting</div>
+    <div data-state="1" hidden>Ready</div>
+    <div data-state="2" hidden>Shutting down</div>
   </section>
+  <section id="backups">
+    <h2>Backups</h2>
+    <table style="border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>Name</th><th>Date</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
   <script>
-  const ws = new WebSocket("ws://" + location.host);
+    const $ = sel => document.querySelector(sel);
+    const stateDivs = document.querySelectorAll("#status [data-state]");
+    const tbody = $("#backups tbody");
+    const assert = (data, func) => {
+      if(!func(data)){
+        throw new Error("ASSERT: data " + data + " did not match " + func);
+      }
+    };
 
-  // Connection opened
-  ws.addEventListener("open", function (event) {
-      ws.send("Hello Server!");
-  });
+    const ws = new WebSocket("ws://" + location.host);
 
-  // Listen for messages
-  ws.addEventListener("message", function (event) {
-      console.log("Message from server ", event.data);
-  });
+    // Connection opened
+    ws.addEventListener("open", function (event) {
+        ws.send("Hello Server!");
+    });
+
+    // Listen for messages
+    ws.addEventListener("message", function (event) {
+      const data = JSON.parse(event.data);
+      Object.entries(data).forEach(([message, value]) => {
+        console.log(message, value);
+        switch (message){
+          case "newState":
+            assert(value, x => x === 0 || x === 1 || x === 2);
+            stateDivs.forEach(x=>x.hidden = true);
+            $(`[data-state="${value}"]`).hidden = false;
+          break;
+          case "exit":
+            alert(`Exited with code ${value.code} or signal ${value.signal}`);
+          break;
+          case "backups":
+            tbody.innerHTML = "";
+            setTimeout(() => {
+              value.forEach(backup => {
+                const date = new Date(backup.replace(/_/g, ":"));
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${backup}.zip</td><td>${date}</td><td><button>Restore</button><button>Delete</button></td>`;
+                tbody.appendChild(tr);
+              });
+            }, 0);
+          break;
+        }
+      });
+    });
   </script>
 </body>
 </html>
