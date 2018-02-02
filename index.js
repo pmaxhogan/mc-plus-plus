@@ -92,9 +92,11 @@ wss.on("connection", function connection(ws) {
   ws.on("message", function incoming(message) {
     try{
       const data = JSON.parse(message);
+      console.log("got", message);
       Object.entries(data).forEach(([key, value]) => {
         switch (key){
           case "auth":
+            console.log("auth", auth, "value", value);
             const correctAuth = auth.some(user => {
               if(user.username === value.username && user.password === value.password){
                 return true;
@@ -105,7 +107,7 @@ wss.on("connection", function connection(ws) {
         }
       });
     }catch(e){
-      console.error(e);
+      console.error(e, message);
     }
   });
 

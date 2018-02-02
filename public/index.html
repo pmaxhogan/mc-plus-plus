@@ -75,7 +75,7 @@
 
     // Connection opened
     ws.addEventListener("open", function (event) {
-        ws.send("Hello Server!");
+      console.log("hello");
     });
 
     // Listen for messages
@@ -111,8 +111,9 @@
       });
     });
 
-    form.onsubmit = () => {
-      ws.send(JSON.stringify({}));
+    form.onsubmit = e => {
+      ws.send(JSON.stringify({auth: {username: username.value, password: password.value}}));
+      e.preventDefault();
     };
   </script>
 </body>
