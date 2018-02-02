@@ -95,8 +95,6 @@ wss.on("connection", function connection(ws) {
       Object.entries(data).forEach(([key, value]) => {
         switch (key){
           case "auth":
-            value.username;
-            value.password;
             const correctAuth = auth.some(user => {
               if(user.username === value.username && user.password === value.password){
                 return true;
