@@ -102,7 +102,7 @@ wss.on("connection", function connection(ws) {
                 return true;
               }
             });
-            ws.send({correctAuth});
+            ws.send(JSON.stringify({correctAuth}));
           break;
         }
       });
