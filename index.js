@@ -323,8 +323,6 @@ const stat = util.promisify(fs.stat);
 const unlink = util.promisify(fs.unlink);
 const readdir = util.promisify(fs.readdir);
 const rmdir = util.promisify(fs.rmdir);
-const join = path.join;
-const resolve = path.resolve;
 
 const rmRf = async function(dir){
   console.log("rming", resolve(dir));
