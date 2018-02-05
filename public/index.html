@@ -64,6 +64,7 @@
     const portContainer = $("#port-container");
     const port = $("#port");
     const form = $("form");
+    const login = $("#login");
 
     let correctUsername;
     let correctPassword;
@@ -115,6 +116,7 @@
               correctUsername = username.value;
               correctPassword = password.value;
 
+              login.hidden = true;
             }else{
               alert("Incorrect username or password.");
             }
