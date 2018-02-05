@@ -65,6 +65,9 @@
     const port = $("#port");
     const form = $("form");
 
+    let correctUsername;
+    let correctPassword;
+
     const assert = (data, func) => {
       if(!func(data)){
         throw new Error("ASSERT: data " + data + " did not match " + func);
@@ -106,6 +109,15 @@
           case "port":
             portContainer.hidden = false;
             port.innerText = location.hostname + ":" + value;
+          break;
+          case "correctAuth":
+            if(value){
+              correctUsername = username.value;
+              correctPassword = password.value;
+
+            }else{
+              alert("Incorrect username or password.");
+            }
           break;
         }
       });
