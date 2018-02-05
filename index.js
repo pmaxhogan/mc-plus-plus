@@ -339,10 +339,14 @@ const rmRf = async function(dir){
   await rmdir(resolve(dir));
 };
 
+const unzipPromise = (backup, fileName) => new Promise((resolve, reject) => {
+  fs.createReadStream(join(serverPath, "backups", backup, fileName + ".zip"))).pipe(unzip.Extract({path: join(serverPath, fileName)})).on("close", resolve);
+});
 
-const restoreBackup = backup => {
-  rmRf(join(serverPath));
-  unzip();
+const restoreBackup = async function(backup){
+  await rmRf(join(serverPath, "world"));
+  await rmRf(join(serverPath, "world_nether"));
+  await rmRf(join(serverPath, "world_the_end"));
 };
 
 setTimeout(() => {
