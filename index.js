@@ -1,10 +1,13 @@
 const fs = require("fs");
-const archiver = require("archiver");
+const http = require("http");
+const util = require("util");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
+
+const unzip = require("unzip");
+const archiver = require("archiver");
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
-const http = require("http");
 
 const noop = err => {if(err) console.error(err);};
 
@@ -314,6 +317,34 @@ const rmBackup = fileName => {
       fs.rmdir(dir, noop);
     }).catch(() => {});
   });
+};
+
+const stat = util.promisify(fs.stat);
+const unlink = util.promisify(fs.unlink);
+const readdir = util.promisify(fs.readdir);
+const rmdir = util.promisify(fs.rmdir);
+const join = path.join;
+const resolve = path.resolve;
+
+const rmRf = async function(dir){
+  console.log("rming", resolve(dir));
+  const files = await readdir(resolve(dir));
+  console.log(files);
+  for(let i = 0; i < files.length; i ++){
+    const file = await stat(resolve(join(dir, files[i])));
+    if(file.isDirectory()){
+      await rmRf(resolve(join(dir, files[i])));
+    }else{
+      await unlink(resolve(join(dir, files[i])));
+    }
+  }
+  await rmdir(resolve(dir));
+};
+
+
+const restoreBackup = backup => {
+  rmRf(join(serverPath));
+  unzip();
 };
 
 setTimeout(() => {
