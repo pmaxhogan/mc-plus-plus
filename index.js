@@ -344,9 +344,11 @@ const unzipPromise = (backup, fileName) => new Promise((resolve, reject) => {
 });
 
 const restoreBackup = async function(backup){
-  await rmRf(join(serverPath, "world"));
-  await rmRf(join(serverPath, "world_nether"));
-  await rmRf(join(serverPath, "world_the_end"));
+  const names = ["world", "world_nether", "world_the_end"];
+  for(const name of names){
+    await rmRf(join(serverPath, name));
+    await unzipPromise(backup, name);
+  }
 };
 
 setTimeout(() => {
