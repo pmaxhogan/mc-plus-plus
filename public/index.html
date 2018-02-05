@@ -27,7 +27,7 @@
   <h1>Your Minecraft Server Config</h1>
   <section id="status">
     <h2>Status</h2>
-    <p>Always up-to-date</p>
+    <p>Always up to date</p>
     <div data-state="-1">Loading...</div>
     <div data-state="0" hidden>Starting</div>
     <div data-state="1" hidden>Ready</div>
@@ -77,6 +77,8 @@
 
     const ws = new WebSocket("ws://" + location.host);
 
+    const send = data => ws.send(JSON.stringify(data));
+
     // Connection opened
     ws.addEventListener("open", function (event) {
       console.log("hello");
@@ -102,7 +104,8 @@
               value.forEach(backup => {
                 const date = new Date(backup.replace(/_/g, ":"));
                 const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${backup}.zip</td><td>${date}</td><td><button>Restore</button><button>Delete</button></td>`;
+                tr.dataset.name = backup;
+                tr.innerHTML = `<td>${backup}.zip</td><td>${date}</td><td><button data-action=restore>Restore</button><button data-action=delete>Delete</button></td>`;
                 tbody.appendChild(tr);
               });
             }, 0);
@@ -119,6 +122,7 @@
               login.hidden = true;
             }else{
               alert("Incorrect username or password.");
+              username.value = password.value = "";
             }
           break;
         }
@@ -128,6 +132,17 @@
     form.onsubmit = e => {
       ws.send(JSON.stringify({auth: {username: username.value, password: password.value}}));
       e.preventDefault();
+    };
+
+    tbody.onclick = e => {
+      const node = e.target;
+      if(node && node.nodeName.toLowerCase() === "button" && node.dataset.action){
+        if(node.dataset.action === "delete"){
+
+        }else if(node.dataset.action === "restore"){
+          send({restoreBackup: node.parentElement.parentElement.dataset.name});
+        }
+      }
     };
   </script>
 </body>
