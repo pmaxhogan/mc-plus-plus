@@ -50,7 +50,7 @@ You will periodically get JSON messages sent. These will have one or more proper
 
 NOT IMPLEMENTED YET
 
- - `setBackup`: String
+ - `restoreBackup`: String
   The current world will be rolled back to this backup.
 
  - `op`: String
