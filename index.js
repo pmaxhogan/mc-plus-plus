@@ -76,6 +76,7 @@ let playersOnline = 0;
 
 let lines = [];
 let backups = [];
+let isBackingUp = false;
 let port;
 let restoring = false;
 let restore = () => {};
@@ -278,7 +279,8 @@ onLine(/Starting Minecraft server on .*:(\d+)/i, (_, parsedPort) => {
 });
 
 const backup = () => {
-  if(state !== 1) return;
+  if(state !== 1 || isBackingUp) return;
+  isBackingUp = true;
   server.stdin.write("save-all\n");
   onLine(/Saved the world$/ig, () => {
     server.stdin.write("save-off\n");
@@ -333,6 +335,7 @@ const checkBackupDupes = () => {
       });
     }
     arr.push(timeStamp);
+    isBackingUp = false;
     return arr;
   }, []);
 };
