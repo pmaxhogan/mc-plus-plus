@@ -78,8 +78,9 @@
     const ws = new WebSocket("ws://" + location.host);
 
     const send = data => {
-      data.username = correctUsername;
-      data.password = correctPassword;
+      data.auth = {};
+      data.auth.username = correctUsername;
+      data.auth.password = correctPassword;
       ws.send(JSON.stringify(data));
     };
 
