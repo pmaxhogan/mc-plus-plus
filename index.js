@@ -130,7 +130,10 @@ wss.on("connection", function connection(ws) {
             };
           break;
           case "deleteBackup":
-            rmBackup(value).then(() => send({backups})).catch();
+            rmBackup(value).then(() => {
+              backups.splice(backups.indexOf(value));
+              send({backups});
+            }).catch();
           break;
           case "auth":break;
           default:
