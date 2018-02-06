@@ -72,6 +72,8 @@ let playersOnline = 0;
 let lines = [];
 let backups = [];
 let port;
+let restoring = false;
+let restore = () => {};
 
 const onLine = (regex, callback, delAfterFirstCall) => {
   lines.push([regex, callback, delAfterFirstCall]);
@@ -96,19 +98,34 @@ wss.on("connection", function connection(ws) {
     try{
       const data = JSON.parse(message);
       console.log("got", message);
+      let correctAuth = false;
+      const obj = {};
+
+      if(data.auth){
+        correctAuth = auth.some(user => {
+          if(user.username === value.username && user.password === value.password){
+            return true;
+          }
+        });
+        obj.correctAuth = correctAuth;
+      }
       Object.entries(data).forEach(([key, value]) => {
         switch (key){
-          case "auth":
-            console.log("auth", auth, "value", value);
-            const correctAuth = auth.some(user => {
-              if(user.username === value.username && user.password === value.password){
-                return true;
-              }
-            });
-            ws.send(JSON.stringify({correctAuth}));
+          case "restoreBackup":
+            if(!correctAuth) break;
+            restoring = true;
+            console.log("RESTORE", value);
+            stop();
+            restore = () => {
+              restoreBackup(value).then(() => {
+                restoring = false;
+                start();
+              });
+            };
           break;
         }
       });
+      ws.send(JSON.stringify(obj));
     }catch(e){
       console.error(e, message);
     }
@@ -185,12 +202,16 @@ const start = () => {
 
   server.on("exit", (code, signal) => {
     console.log("The server has stopped.", code, signal);
-    if(signal !== "SIGTERM" && signal !== "SIGINT" && signal !== "SIGBREAK" && code !== 130){
-      console.log("restarting due to crash");
-      send({crash: {code, signal}}, {}, start);
+    if(restoring){
+      restore();
     }else{
-      console.log("closing due to user termination");
-      send({exit: {code, signal}}, {}, () => wss.close(process.exit));
+      if(signal !== "SIGTERM" && signal !== "SIGINT" && signal !== "SIGBREAK" && code !== 130){
+        console.log("restarting due to crash");
+        send({crash: {code, signal}}, {}, start);
+      }else{
+        console.log("closing due to user termination");
+        send({exit: {code, signal}}, {}, () => wss.close(process.exit));
+      }
     }
   });
 };
@@ -340,7 +361,11 @@ const rmRf = async function(dir){
 };
 
 const unzipPromise = (backup, fileName) => new Promise((resolve, reject) => {
-  fs.createReadStream(join(serverPath, "backups", backup, fileName + ".zip"))).pipe(unzip.Extract({path: join(serverPath, fileName)})).on("close", resolve);
+  fs.createReadStream(
+    join(serverPath, "backups", backup, fileName + ".zip")
+  ).pipe(
+    unzip.Extract({path: join(serverPath, fileName)})
+  ).on("close", resolve);
 });
 
 const restoreBackup = async function(backup){
