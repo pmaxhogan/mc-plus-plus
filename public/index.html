@@ -143,7 +143,7 @@
       const node = e.target;
       if(node && node.nodeName.toLowerCase() === "button" && node.dataset.action){
         if(node.dataset.action === "delete"){
-
+          send({deleteBackup: node.parentElement.parentElement.dataset.name});
         }else if(node.dataset.action === "restore"){
           send({restoreBackup: node.parentElement.parentElement.dataset.name});
         }
