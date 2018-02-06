@@ -4,7 +4,7 @@ const util = require("util");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 
-const unzip = require("unzip");
+const unzip = require("unzip-stream");
 const archiver = require("archiver");
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
@@ -109,6 +109,7 @@ wss.on("connection", function connection(ws) {
         });
         obj.correctAuth = correctAuth;
       }
+      console.log("correctAuth", correctAuth);
       Object.entries(data).forEach(([key, value]) => {
         switch (key){
           case "restoreBackup":
@@ -346,9 +347,7 @@ const readdir = util.promisify(fs.readdir);
 const rmdir = util.promisify(fs.rmdir);
 
 const rmRf = async function(dir){
-  console.log("rming", resolve(dir));
   const files = await readdir(resolve(dir));
-  console.log(files);
   for(let i = 0; i < files.length; i ++){
     const file = await stat(resolve(join(dir, files[i])));
     if(file.isDirectory()){
@@ -361,6 +360,7 @@ const rmRf = async function(dir){
 };
 
 const unzipPromise = (backup, fileName) => new Promise((resolve, reject) => {
+  console.log("extracting", join(serverPath, "backups", backup, fileName + ".zip"), "to", join(serverPath, fileName));
   fs.createReadStream(
     join(serverPath, "backups", backup, fileName + ".zip")
   ).pipe(
@@ -371,6 +371,7 @@ const unzipPromise = (backup, fileName) => new Promise((resolve, reject) => {
 const restoreBackup = async function(backup){
   const names = ["world", "world_nether", "world_the_end"];
   for(const name of names){
+    console.log("rm -rf " + join(serverPath, name));
     await rmRf(join(serverPath, name));
     await unzipPromise(backup, name);
   }
