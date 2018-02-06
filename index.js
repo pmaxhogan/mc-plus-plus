@@ -9,6 +9,11 @@ const archiver = require("archiver");
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
 
+const stat = util.promisify(fs.stat);
+const unlink = util.promisify(fs.unlink);
+const readdir = util.promisify(fs.readdir);
+const rmdir = util.promisify(fs.rmdir);
+
 const noop = err => {if(err) console.error(err);};
 
 try{
@@ -124,11 +129,18 @@ wss.on("connection", function connection(ws) {
               });
             };
           break;
+          case "deleteBackup":
+            deleteBackup(value);
+          break;
+          case "auth":break;
+          default:
+            console.error("unknown key", key, "in ws message");
         }
       });
       ws.send(JSON.stringify(obj));
     }catch(e){
       console.error(e, message);
+      ws.send(JSON.stringify({"error": e.toString()}));
     }
   });
 
@@ -322,7 +334,7 @@ const checkBackupDupes = () => {
   }, []);
 };
 
-const rmBackup = fileName => {
+const rmBackup = async function(fileName){
   const dir = join(serverPath, "backups", fileName);
   console.log("rm -rf ", dir);
   const unlinkPromise = file => new Promise((resolve, reject) => {
@@ -332,19 +344,15 @@ const rmBackup = fileName => {
     });
   });
   let promises = [];
-  fs.readdir(dir, (err, files) => {
-    files.forEach(file => promises.push(unlinkPromise(join(dir, file))));
-    Promise.all(promises).then(res => {
-      console.log("res", res);
-      fs.rmdir(dir, noop);
-    }).catch(() => {});
-  });
+  const files = await readdir(dir);
+  files.forEach(file => promises.push(unlinkPromise(join(dir, file))));
+  try{
+    const res = await Promise.all(promises);
+    console.log("res", res);
+    await rmdir(dir);
+  }catch(e){}
 };
 
-const stat = util.promisify(fs.stat);
-const unlink = util.promisify(fs.unlink);
-const readdir = util.promisify(fs.readdir);
-const rmdir = util.promisify(fs.rmdir);
 
 const rmRf = async function(dir){
   const files = await readdir(resolve(dir));
