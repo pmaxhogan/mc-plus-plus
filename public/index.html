@@ -77,7 +77,11 @@
 
     const ws = new WebSocket("ws://" + location.host);
 
-    const send = data => ws.send(JSON.stringify(data));
+    const send = data => {
+      data.username = correctUsername;
+      data.password = correctPassword;
+      ws.send(JSON.stringify(data));
+    };
 
     // Connection opened
     ws.addEventListener("open", function (event) {
