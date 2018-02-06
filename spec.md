@@ -35,27 +35,33 @@ You will periodically get JSON messages sent. These will have one or more proper
   #### Backup scheduling
   At most one backup is stored one hour *within the past 24 hours* (1000 * 60 * 60 ms, not 1 clock hour). After the past 24 hours, at most one backup is stored per calendar day. Yeah, I know the backup system is weird, but it was the easiest option that actually made come kind of sense. If someone is interested in adding a PR that fixes this, it'd be great. I might also fix it later.
 
- - `port`: Number
+ - `port`: Number  
   This is the port that the server is running. If the server has announced it's port yet, it will be sent on connection. Also, the port will be send whenever it is announced or is changed.
 
- - `correctAuth`: Boolean
+ - `error`: String  
+  This will be sent if something wrong happened while processing a sent object. Make sure your JSON is correct and encoded in UTF-8. The String will be `err.toString()` from the thrown error from Node.js.
+
+ - `correctAuth`: Boolean  
   This will be `true` if auth from `auth` was correct, otherwise `false`.
+
 
 ## Properties You Can Send
 
-  - `auth`: Object
-   - `username`: String
-   - `password`: String
+ - `auth`: Object
+  - `username`: String
+  - `password`: String
    Try to see if a username / password combo is correct. You be responded with `correctAuth` shortly.
 
 Everything below requires the auth object to be sent along with it.
 
-  - `restoreBackup`: String
+ - `restoreBackup`: String  
    The current world will be rolled back to this backup.
 
 NOT IMPLEMENTED YET
 
-  - `deleteBackup`: String
+  - `deleteBackup`: String  
+    This deletes a backup with the name of the String.
+
 
  - `op`: String
   Give OP permissions to the player with the name or UUID of the String specified.
