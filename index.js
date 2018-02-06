@@ -132,6 +132,7 @@ wss.on("connection", function connection(ws) {
           case "deleteBackup":
             rmBackup(value).then(() => {
               backups.splice(backups.indexOf(value));
+              backups = backups.filter(Boolean);
               send({backups});
             }).catch();
           break;
