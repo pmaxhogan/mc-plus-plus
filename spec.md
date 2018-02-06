@@ -57,11 +57,10 @@ Everything below requires the auth object to be sent along with it.
  - `restoreBackup`: String  
    The current world will be rolled back to this backup.
 
-NOT IMPLEMENTED YET
-
   - `deleteBackup`: String  
     This deletes a backup with the name of the String.
 
+    NOT IMPLEMENTED YET
 
  - `op`: String
   Give OP permissions to the player with the name or UUID of the String specified.
