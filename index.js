@@ -103,7 +103,7 @@ wss.on("connection", function connection(ws) {
 
       if(data.auth){
         correctAuth = auth.some(user => {
-          if(user.username === value.username && user.password === value.password){
+          if(user.username === data.auth.username && user.password === data.auth.password){
             return true;
           }
         });
