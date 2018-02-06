@@ -48,10 +48,14 @@ You will periodically get JSON messages sent. These will have one or more proper
    - `password`: String
    Try to see if a username / password combo is correct. You be responded with `correctAuth` shortly.
 
+Everything below requires the auth object to be sent along with it.
+
+  - `restoreBackup`: String
+   The current world will be rolled back to this backup.
+
 NOT IMPLEMENTED YET
 
- - `restoreBackup`: String
-  The current world will be rolled back to this backup.
+  - `deleteBackup`: String
 
  - `op`: String
   Give OP permissions to the player with the name or UUID of the String specified.
