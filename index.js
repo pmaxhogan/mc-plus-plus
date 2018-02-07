@@ -86,7 +86,7 @@ const onLine = (regex, callback, delAfterFirstCall) => {
 };
 
 
-const html = fs.readFileSync("public/index.html");
+const html = fs.readFileSync(resolve("public/index.html"));
 const httpServer = http.createServer(function (request, response) {
     response.writeHeader(200, { "Content-Type": "text/html" });
     response.write(html);
