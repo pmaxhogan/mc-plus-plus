@@ -1,6 +1,7 @@
 const fs = require("fs");
 const http = require("http");
 const util = require("util");
+const readline = require("readline");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 
@@ -224,6 +225,13 @@ const start = () => {
   });
   server.stdout.pipe(process.stdout);
   process.stdin.pipe(server.stdin);
+  //
+  // const readline = require('readline');
+  //
+  // const rl = readline.createInterface({
+  //   input: process.stdin,
+  //   output: process.stdout
+  // });
 
   server.on("exit", (code, signal) => {
     console.log("The server has stopped.", code, signal);
