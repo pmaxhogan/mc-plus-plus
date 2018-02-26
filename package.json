@@ -18,6 +18,7 @@
   "homepage": "https://github.com/programmer5000-com/mc-plus-plus#readme",
   "dependencies": {
     "archiver": "^2.1.1",
+    "discord.js": "^11.3.0",
     "rimraf": "^2.6.2",
     "unzip-stream": "^0.3.0",
     "ws": "^4.0.0"

@@ -2,6 +2,7 @@ const fs = require("fs");
 const http = require("http");
 const util = require("util");
 const readline = require("readline");
+const Discord = require("discord.js");
 const { execFile } = require("child_process");
 const { resolve, dirname, join } = require("path");
 
@@ -9,6 +10,7 @@ const unzip = require("unzip-stream");
 const archiver = require("archiver");
 const WebSocket = require("ws");
 const serverPath = dirname(resolve(process.argv[2]));
+const client = new Discord.Client();
 
 const stat = util.promisify(fs.stat);
 const unlink = util.promisify(fs.unlink);
@@ -43,6 +45,11 @@ try{
   config = require(join(serverPath, "mc++.json"));
 }catch(e){
   console.error("Could not read config file", e);
+}
+
+if(config.discord){
+  client.login(config.discord.token);
+  client.on("ready", () => console.log("discord bot ready"));
 }
 
 const javaArgs = `-Xms${config.javaMemStart || "1G"} -Xmx${config.javaMemMax || "1G"} -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=50 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:InitiatingHeapOccupancyPercent=10 -XX:G1MixedGCLiveThresholdPercent=50 -XX:+AggressiveOpts -DIReallyKnowWhatIAmDoingISwear ${config.javaArgs ? config.javaArgs.trim() + " " : ""}-server -jar`;//a crapton of jvm args. i hope they're useful!
@@ -293,6 +300,14 @@ onLine(/Starting Minecraft server on .*:(\d+)/i, (_, parsedPort) => {
   port = parseInt(parsedPort);
   send({port});
 });
+
+if(config.discord){
+  onLine(/([a-zA-Z0-9_]{1,16}) issued server command: (.*)/, (_, username, command) => {
+    if(!config.discord.auditLog.commandBlacklist.includes(command)){
+      client.guilds.get(config.discord.auditLog.guildId).channels.get(config.discord.auditLog.channelId).send(username + " send command `" + command + "`");
+    }
+  });
+}
 
 const backup = () => {
   if(state !== 1 || isBackingUp) return;
