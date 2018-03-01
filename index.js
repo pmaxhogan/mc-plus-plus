@@ -303,8 +303,9 @@ onLine(/Starting Minecraft server on .*:(\d+)/i, (_, parsedPort) => {
 
 if(config.discord){
   onLine(/([a-zA-Z0-9_]{1,16}) issued server command: (.*)/, (_, username, command) => {
-    if(!config.discord.auditLog.commandBlacklist.includes(command)){
-      console.log(config.discord.auditLog.commandBlacklist, "list does not have", command);
+    const cmd = command.slice(1).split(" ")[0]);
+    if(!config.discord.auditLog.commandBlacklist.includes(cmd){
+      console.log(config.discord.auditLog.commandBlacklist, "list does not have", cmd);
       client.guilds.get(config.discord.auditLog.guildId).channels.get(config.discord.auditLog.channelId).send(username + " sent command `" + command + "`");
     }
   });
