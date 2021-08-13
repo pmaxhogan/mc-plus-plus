@@ -32,9 +32,11 @@ let auth = [];
 try{
   auth = require("./auth.json");
 }catch(e){
-  if(e.code === "ENOENT"){
-    fs.writeFileSync("auth.json", {});
+  if(e.code === "MODULE_NOT_FOUND"){
+    fs.writeFileSync("auth.json", JSON.stringify({}));
+    auth = [];
   }else{
+    console.log(e.code);
     throw e;
   }
 }
